@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="php-automate-build-ant" default="full-build">
+
+
+    <property file="build/properties/common"/>
+    <property file="build/properties/environment"/>
+    <property file="build/properties/env.${environment}"/>
+
+
+<!--  CD   -->
+    <target name="deploy-remote">
+        <echo message="Deploying remote" />
+        <sshexec
+            host="${remote.host}"
+            username="${remote.username}"
+            trust="true"
+            keyfile="${remote.keyfile}"
+            command="sh -c 'cd ${remote.dir} &amp;&amp; ant deploy'" />
+    </target>
+
+    <target name="deploy" depends="pull, docker-compose-composer, migrate">
+        <echo message="Deploy latest" />
+    </target>
+    <target name="pull">
+        <echo message="git pull" />
+        <exec executable="git" failonerror="true">
+            <arg value="pull"/>
+        </exec>
+    </target>
+
+    <target name="migrate">
+        <echo message="php artisan migrate" />
+        <exec executable="docker" failonerror="true">
+            <arg value="exec"/>
+            <arg value="${docker.php}"/>
+            <arg value="sh"/>
+            <arg value="-c"/>
+            <arg value="php artisan migrate --force"/>
+        </exec>
+    </target>
+
+    <target name="migrate-phpunit">
+        <echo message="php artisan migrate" />
+        <exec executable="docker" failonerror="true">
+            <arg value="exec"/>
+            <arg value="${docker.php}"/>
+            <arg value="sh"/>
+            <arg value="-c"/>
+            <arg value="php artisan migrate --force --database=pgsql_phpunit"/>
+        </exec>
+    </target>
+
+    <target name="docker-compose-composer" description="Install composer packages.">
+        <echo message="docker-compose up composer-install" />
+        <exec executable="docker-compose" failonerror="true">
+            <arg value="up"/>
+            <arg value="composer-install"/>
+        </exec>
+    </target>
+
+
+
+
+
+<!--  CI   -->
+
+    <property name="pdepend" value="${basedir}/vendor/bin/pdepend"/>
+    <property name="phpcs" value="${basedir}/vendor/bin/phpcs"/>
+    <property name="phpmd" value="${basedir}/vendor/bin/phpmd"/>
+    <property name="phpunit" value="./vendor/bin/phpunit"/>
+    <property name="phpstan" value="./vendor/bin/phpstan"/>
+
+    <target name="composer" description="Install composer packages.">
+        <echo message="composer install" />
+        <exec executable="composer" failonerror="true">
+            <arg value="install"/>
+            <arg value="--ignore-platform-reqs"/>
+        </exec>
+    </target>
+
+    <target name="clean" unless="clean.done" depends="clean-docker-artifacts" description="Cleanup build artifacts.">
+        <delete dir="${basedir}/build/reports/checkstyle"/>
+        <delete dir="${basedir}/build/reports/pdepend"/>
+        <delete dir="${basedir}/build/reports/pmd"/>
+        <delete dir="${basedir}/build/reports/jdepend"/>
+        <property name="clean.done" value="true"/>
+    </target>
+
+
+    <target name="clean-docker-artifacts" description="Cleaning phpunit artifacts.">
+        <exec executable="docker" failonerror="true">
+            <arg value="exec"/>
+            <arg value="${docker.php}"/>
+            <arg value="sh"/>
+            <arg value="-c"/>
+            <arg value="rm ./build/reports/coverage ./build/reports/phpstan -Rf" />
+        </exec>
+    </target>
+
+    <target name="prepare" unless="prepare.done" depends="clean" description="Prepare for build.">
+        <mkdir dir="${basedir}/build/reports/coverage"/>
+        <mkdir dir="${basedir}/build/reports/checkstyle"/>
+        <mkdir dir="${basedir}/build/reports/pdepend"/>
+        <mkdir dir="${basedir}/build/reports/pmd"/>
+        <mkdir dir="${basedir}/build/reports/jdepend"/>
+        <mkdir dir="${basedir}/build/reports/phpstan"/>
+        <property name="prepare.done" value="true"/>
+    </target>
+
+    <target name="quick-build" depends="composer, prepare, lint, phpunit-no-coverage, phpstan"
+            description="Perform lint check and run tests without generating code coverage reports.">
+        <echo message="Built"/>
+    </target>
+
+    <target name="static-analysis" depends="lint, pdepend, phpmd-ci, phpcs-ci"
+            description="Perform static analysis.">
+        <echo message="Done"/>
+    </target>
+
+    <target name="full-build" depends="composer, prepare, static-analysis, phpunit, phpcs, phpstan"
+            description="Perform static analysis, run tests, and generate project documentation.">
+        <echo message="Built"/>
+    </target>
+
+
+
+
+    <target name="lint" unless="lint.done" description="Perform syntax check of PHP sourcecode files.">
+        <apply executable="php" failonerror="true" taskname="lint">
+            <arg value="-l"/>
+            <fileset dir="${basedir}/app">
+                <include name="**/*.php"/>
+            </fileset>
+            <fileset dir="${basedir}/tests">
+                <include name="**/*.php"/>
+            </fileset>
+            <fileset dir="${basedir}/database">
+                <include name="**/*.php"/>
+            </fileset>
+            <fileset dir="${basedir}/config">
+                <include name="**/*.php"/>
+            </fileset>
+        </apply>
+        <property name="lint.done" value="true"/>
+    </target>
+
+    <target name="pdepend" unless="pdepend.done" depends="prepare"
+            description="Calculate software metrics using PHP_Depend and log result in XML format. Intended for usage within a continuous integration environment.">
+        <exec executable="${pdepend}" taskname="pdepend">
+            <arg value="--jdepend-xml=${basedir}/build/reports/jdepend/jdepend.xml"/>
+            <arg value="--jdepend-chart=${basedir}/build/reports/pdepend/dependencies.svg"/>
+            <arg value="--overview-pyramid=${basedir}/build/reports/pdepend/overview-pyramid.svg"/>
+            <arg path="${basedir}/app"/>
+        </exec>
+        <property name="pdepend.done" value="true"/>
+    </target>
+
+    <target name="phpcs" unless="phpcs.done"
+            description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
+        <exec executable="${phpcs}" taskname="phpcs">
+            <arg value="--standard=PSR2"/>
+            <arg value="--extensions=php"/>
+            <arg value="--ignore=autoload.php"/>
+            <arg path="${basedir}/app"/>
+            <arg path="${basedir}/tests"/>
+        </exec>
+        <property name="phpcs.done" value="true"/>
+    </target>
+
+    <target name="phpcs-ci" unless="phpcs.done" depends="prepare"
+            description="Find coding standard violations using PHP_CodeSniffer and log result in XML format. Intended for usage within a continuous integration environment.">
+        <exec executable="${phpcs}" output="/dev/null" taskname="phpcs">
+            <arg value="--report=checkstyle"/>
+            <arg value="--report-file=${basedir}/build/reports/checkstyle/checkstyle.xml"/>
+            <arg value="--standard=PSR2"/>
+            <arg value="--extensions=php"/>
+            <arg value="--ignore=autoload.php"/>
+            <arg path="${basedir}/app"/>
+            <arg path="${basedir}/tests"/>
+        </exec>
+        <property name="phpcs.done" value="true"/>
+    </target>
+
+    <target name="phpmd" unless="phpmd.done"
+            description="Perform project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
+        <exec executable="${phpmd}" taskname="phpmd">
+            <arg path="${basedir}/app"/>
+            <arg value="text"/>
+            <arg path="${basedir}/build/phpmd.xml"/>
+        </exec>
+        <property name="phpmd.done" value="true"/>
+    </target>
+
+    <target name="phpmd-ci" unless="phpmd.done" depends="prepare"
+            description="Perform project mess detection using PHPMD and log result in XML format. Intended for usage within a continuous integration environment.">
+        <exec executable="${phpmd}" taskname="phpmd">
+            <arg path="${basedir}/app"/>
+            <arg value="xml"/>
+            <arg path="${basedir}/build/phpmd.xml"/>
+            <arg value="--reportfile"/>
+            <arg path="${basedir}/build/reports/pmd/pmd.xml"/>
+        </exec>
+        <property name="phpmd.done" value="true"/>
+    </target>
+
+    <target name="phpunit" unless="phpunit.done" depends="prepare, migrate-phpunit" description="Run unit tests with PHPUnit.">
+        <exec executable="docker" failonerror="true">
+            <arg value="exec"/>
+            <arg value="${docker.php}"/>
+            <arg value="sh"/>
+            <arg value="-c"/>
+            <arg value="${phpunit}
+                --configuration phpunit.xml tests
+                --log-junit ./build/reports/coverage/unitreport.xml
+                --coverage-clover ./build/reports/coverage/clover.xml
+                --coverage-html ./build/reports/coverage/clover_html" />
+        </exec>
+        <property name="phpunit.done" value="true"/>
+    </target>
+
+    <target name="phpstan" unless="phpstan.done" depends="prepare" description="Run phpstan.">
+        <exec executable="docker">
+            <arg value="exec"/>
+            <arg value="${docker.php}"/>
+            <arg value="sh"/>
+            <arg value="-c"/>
+            <arg value="${phpstan}
+                --configuration=phpstan.neon
+                --memory-limit=1240M
+                --no-progress
+                --error-format=checkstyle
+                >> './build/reports/phpstan/report.log'" />
+        </exec>
+        <property name="phpstan.done" value="true"/>
+    </target>
+
+    <target name="phpunit-no-coverage" unless="phpunit.done" depends="prepare, migrate-phpunit"
+            description="Run unit tests with PHPUnit without generating code coverage reports.">
+        <exec executable="docker" failonerror="true" resultproperty="result.phpunit" taskname="phpunit">
+            <arg value="exec"/>
+            <arg value="${docker.php}"/>
+            <arg value="sh"/>
+            <arg value="-c"/>
+            <arg value="${phpunit} --configuration phpunit.xml tests --no-coverage "/>
+        </exec>
+        <property name="phpunit.done" value="true"/>
+    </target>
+
+
+</project>

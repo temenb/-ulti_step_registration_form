@@ -1,0 +1,84 @@
+version: '3'
+services:
+  pgsql:
+    container_name: msrf-pgsql
+    build: ./docker/containers/postgres
+    ports:
+      - '${FORWARD_DB_PORT:-5432}:5432'
+    restart: always
+    environment:
+      PGPASSWORD: '${DB_PASSWORD:-secret}'
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_USER: '${DB_USERNAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+    volumes:
+      - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
+      - './docker/containers/postgres/data:/var/lib/postgresql/data'
+      - './docker/containers/postgres/dumps:/dumps'
+    networks:
+      - msrf
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - '-q'
+        - '-d'
+        - '${DB_DATABASE}'
+        - '-U'
+        - '${DB_USERNAME}'
+      retries: 3
+      timeout: 5s
+
+  web:
+    container_name: msrf-web
+    build: ./docker/containers/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+    volumes:
+      - ./:/project
+      - ./docker/containers/nginx/config/site.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/containers/nginx/logs:/etc/logs/nginx
+    networks:
+      - msrf
+
+  php:
+    container_name: msrf-php
+    build: ./docker/containers/php
+    restart: always
+    volumes:
+      - ./:/project
+      - ./docker/containers/php/config/php.ini:/usr/local/etc/php/conf.d/php.ini
+    networks:
+      - msrf
+
+  composer:
+    container_name: msrf-composer
+    build: ./docker/containers/composer
+    command: composer install --ignore-platform-reqs
+    volumes:
+      - ./:/app
+    networks:
+      - msrf
+
+  npm:
+    container_name: msrf-npm
+    build: ./docker/containers/npm
+    working_dir: /app
+    command: sh -c "npm i && npm run dev -- --host"
+    ports:
+       - "5173:5173"
+    restart: always
+    volumes:
+      - ./:/app
+      - ./docker/containers/npm/logs:/root/.npm/_logs/
+    networks:
+      - msrf
+
+networks:
+  msrf:
+    driver: bridge
+volumes:
+  msrf-pgsql:
+    driver: local
