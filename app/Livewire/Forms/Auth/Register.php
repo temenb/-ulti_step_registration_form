@@ -2,10 +2,6 @@
 
 namespace App\Livewire\Forms\Auth;
 
-use App\Models\Translation;
-use App\Models\Vocabulary;
-use App\Repositories\Exercises;
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -15,16 +11,15 @@ class Register extends Form
     #[Validate('required|string')]
     public $name;
 
-//    #[Validate('required')]
+    #[Validate('required|phone')]
     public $phone;
 
-    #[Validate('required')]
+    #[Validate('required|email')]
     public $email;
 
-    #[Validate('required')]
+    #[Validate('required|max:20|confirmed')]
     public $password;
 
-    #[Validate('required')]
     public $password_confirmation;
 
     #[Validate('required')]
