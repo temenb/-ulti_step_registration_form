@@ -21,19 +21,40 @@
         <button wire:click="nextStep">{{ __('Continue') }}</button>
     @elseif ($step === 2)
         <h2>{{ __('ID confirmation') }}</h2>
-        <input type="text" wire:model="form.dob" placeholder="{{ __('Date of birth') }}">
-        @error('form.dob') <span class="error">{{ $message }}</span> @enderror
+
+
+        <div
+            x-data
+            x-init="
+    flatpickr($refs.dateInput, {
+      altInput: true,
+      altFormat: 'F j, Y',
+      dateFormat: 'Y-m-d'
+    })
+  "
+        >
+            <input x-ref="dateInput" type="text" placeholder="YYYY-MM-DD" class="w-full" />
+        </div>
+
+
+
 
         <div>
-            @foreach(\App\Enum\IdentifierType::ENUM as $key => $value)
+            @foreach(\App\Enums\IdentifierType::enum() as $key => $value)
                 <input id="identifier-{{$key}}" type="radio" wire:model="form.document_type" value="{{ $key }}">
                 <label for="identifier-{{$key}}">{{ __($value) }}</label>
             @endforeach
         </div>
         @error('form.document_type') <span class="error">{{ $message }}</span> @enderror
 
-        <input type="text" wire:model="form.document_file" placeholder="Номер документа">
-        @error('form.document_file') <span class="error">{{ $message }}</span> @enderror
+        <div>
+            @if (!empty($document_file))
+                <img src="{{ $document_file->temporaryUrl() }}" style="width: 100px; height: 100px;" />
+            @endif
+            <input type="file" wire:model="document_file">
+
+            @error('document_file') <x-input-error :messages="$errors->get('document_file')"/> @enderror
+        </div>
 
         <button wire:click="nextStep">{{ __('Continue') }}</button>
     @elseif ($step === 3)
@@ -48,6 +69,16 @@
         @error('form.zip_code') <span class="error">{{ $message }}</span> @enderror
 
         <input type="text" wire:model="form.country" placeholder="{{ __('Country') }}">
+        <div>
+            <x-input-label>{{ __('Country') }}</x-input-label>
+            <select type="text" wire:model="form.country" width="300px">
+                <option value="0" disabled="disabled">{{ __('Select Country') }}</option>
+                @foreach (\App\Repositories\Countries::ddList() as $countryKey => $countryName)
+                    <option value="{{ $countryKey }}">{{ $countryName }}</option>
+                @endforeach
+            </select>
+            @error("form.fromLanguage")<x-input-error :messages="$errors->get('form.fromLanguage')"/>@enderror
+        </div>
         @error('form.country') <span class="error">{{ $message }}</span> @enderror
 
         <textarea wire:model="form.note" placeholder="Note"></textarea>
