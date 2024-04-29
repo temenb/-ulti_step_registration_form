@@ -3,11 +3,9 @@
 namespace App\Livewire\Components\Auth;
 
 use App\Livewire\Forms\Auth\Register;
-use App\Models\Kyc;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 #[Title('Registration')]

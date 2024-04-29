@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\Interfaces\IRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class Register implements IRepository
 {
@@ -66,7 +67,7 @@ class Register implements IRepository
             ]);
             DB::commit();
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            Log::error($e->getMessage());
             DB::rollBack();
             return false;
         }

@@ -4,11 +4,10 @@ namespace App\Livewire\Forms\Auth;
 
 use App\Enums\IdentifierType;
 use App\Models\Kyc;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
 use App\Repositories\Register as RegisterRepo;
-use Livewire\Attributes\Validate;
+use Livewire\Attributes\Locked;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\Form;
 

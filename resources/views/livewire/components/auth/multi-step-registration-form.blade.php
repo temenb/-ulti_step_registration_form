@@ -8,8 +8,8 @@
                     3 => 'Address',
                 ] as $key => $title
             )
-                <li class="mb-2 flex items-center @if ($key == $this->step) font-bold @else opacity-50 @endif ">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 @if ($key <= $this->latestStep) text-blue-500 @else text-gray-500 @endif " viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                <li class="mb-2 flex items-center" :class="$wire.step == {{$key}}? 'font-bold' : 'opacity-50'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" :class="{{$key}} <= $wire.latestStep? 'text-blue-500': 'text-gray-500'" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                         <circle cx="10" cy="10" r="9" stroke-width="2" fill="none"/>
                         <path d="M6 10l2 2 6-6"/>
                     </svg>
@@ -25,7 +25,7 @@
                 <div class="bg-green-500 text-white text-lg font-bold p-4 mb-4 rounded-full">{{ session('message') }}</div>
             @endif
 
-            <div @if (1 != $step) class="hidden" @endif >
+            <div :class="$wire.step == 1? '': 'hidden'">
                 <h2 class="text-xl font-bold">{{ __('Personal information') }}</h2>
                 <div class="mb-4">
                     <label for="name" class="block text-sm font-medium text-gray-700">{{ __('Name') }} *</label>
@@ -59,7 +59,7 @@
 
                 <button wire:click="nextStep" class="w-full inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">{{ __('Continue') }}</button>
             </div>
-            <div @if (2 != $step) class="hidden" @endif >
+            <div :class="$wire.step == 2? '': 'hidden'">
                 <h2 class="text-xl font-bold">{{ __('ID confirmation') }}</h2>
 
                 <div class="mb-4"
@@ -132,7 +132,7 @@
             </div>
 
 
-            <div @if (3 != $step) class="hidden" @endif >
+            <div :class="$wire.step == 3? '': 'hidden'">
                 <h2 class="text-xl font-bold">{{ __('Address') }}</h2>
 
                 <div class="mb-4">
