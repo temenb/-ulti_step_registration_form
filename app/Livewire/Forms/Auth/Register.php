@@ -83,7 +83,7 @@ class Register extends Form
                 'name' => 'required|string|max:30',
                 'phone' => 'required|unique:users|phone:INTERNATIONAL,UA',
                 'email' => 'required|email|unique:users',
-                'password' => 'required|max:20|confirmed',
+                'password' => 'required|min:6|max:20|confirmed',
                 'password_confirmation' => 'required',
             ],
             2 => [
