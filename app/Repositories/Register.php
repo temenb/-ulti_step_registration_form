@@ -6,6 +6,7 @@ use App\Models\Address;
 use App\Models\Kyc;
 use App\Models\User;
 use App\Repositories\Interfaces\IRepository;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +18,7 @@ class Register implements IRepository
      * @param string $phone
      * @param string $email
      * @param string $password
-     * @param string $dob
+     * @param Carbon $dob
      * @param string $documentType
      * @param string $documentFile
      * @param string $address
@@ -32,7 +33,7 @@ class Register implements IRepository
         string $phone,
         string $email,
         string $password,
-        string $dob,
+        Carbon $dob,
         string $documentType,
         string $documentFile,
         string $address,

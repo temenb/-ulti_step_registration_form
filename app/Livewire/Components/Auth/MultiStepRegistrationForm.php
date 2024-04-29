@@ -40,8 +40,11 @@ class MultiStepRegistrationForm extends Component
 
     public function register(): void
     {
-        $this->form->save();
-        session()->flash('message', 'Registration is successful!');
-        $this->reset(['step', 'latestStep']);
+        if ($this->form->save()) {
+            session()->flash('message', 'Registration is successful!');
+            $this->reset(['step', 'latestStep']);
+        } else {
+            session()->flash('error', 'Smth went wrong. Try later.');
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Livewire\Forms\Auth;
 
 use App\Enums\IdentifierType;
 use App\Models\Kyc;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
 use App\Repositories\Register as RegisterRepo;
@@ -28,7 +29,7 @@ class Register extends Form
 
     public string $dob = '';
 
-    public string $document_type = IdentifierType::Passport->value;
+    public string $document_type = '';
 
     public ?TemporaryUploadedFile $document_file;
 
@@ -42,7 +43,7 @@ class Register extends Form
 
     public ?string $note;
 
-    public function save(): void
+    public function save(): bool
     {
         $this->step = 0;
         $validatedData = $this->validate();
@@ -50,12 +51,14 @@ class Register extends Form
         $documentFile = $this->document_file;
         /** @var string $filePath */
         $filePath = $documentFile->store(path: Kyc::DOCUMENT_PATH);
+        /** @var Carbon $dob */
+        $dob = Carbon::createFromFormat('d.m.Y', $validatedData['dob']);
         $data = [
             'name'          => $validatedData['name'],
             'phone'         => $validatedData['phone'],
             'email'         => $validatedData['email'],
             'password'      => $validatedData['password'],
-            'dob'           => $validatedData['dob'],
+            'dob'           => $dob,
             'documentType'  => $validatedData['document_type'],
             'documentFile'  => $filePath,
             'address'       => $validatedData['address'],
@@ -67,9 +70,10 @@ class Register extends Form
 
         if (RegisterRepo::signUp(...$data)) {
             $this->reset();
-        } else {
-            Storage::delete($filePath);
-        };
+            return true;
+        }
+        Storage::delete($filePath);
+        return false;
     }
 
     public function rules() // @phpstan-ignore-line
@@ -83,7 +87,7 @@ class Register extends Form
                 'password_confirmation' => 'required',
             ],
             2 => [
-                'dob' => 'required|date',
+                'dob' => 'required|date_format:d.m.Y',
                 'document_file' => 'image|max:10000',
                 'document_type' => [
                     'required',
@@ -116,7 +120,7 @@ class Register extends Form
         return [
             'phone.phone' => 'The phone field is not valid phone.',
             'dob.required' => 'The date of birth field is required.',
-            'dob.date' => 'The date of birth field must be a valid date.',
+            'dob.date_format' => 'The date of birth field must be a valid date.',
             'zip_code.regex' => 'The zip_code field is not valid zip code.',
         ];
     }

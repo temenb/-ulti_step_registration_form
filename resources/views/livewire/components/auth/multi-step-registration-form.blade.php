@@ -24,8 +24,11 @@
             @if (session()->has('message'))
                 <div class="bg-green-500 text-white text-lg font-bold p-4 mb-4 rounded-full">{{ session('message') }}</div>
             @endif
+            @if (session()->has('error'))
+                <div class="bg-red-500 text-white text-lg font-bold p-4 mb-4 rounded-full">{{ session('error') }}</div>
+            @endif
 
-            <div :class="$wire.step == 1? '': 'hidden'">
+            <div x-show="$wire.step == 1">
                 <h2 class="text-xl font-bold">{{ __('Personal information') }}</h2>
                 <div class="mb-4">
                     <label for="name" class="block text-sm font-medium text-gray-700">{{ __('Name') }} *</label>
@@ -59,7 +62,7 @@
 
                 <button wire:click="nextStep" class="w-full inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">{{ __('Continue') }}</button>
             </div>
-            <div :class="$wire.step == 2? '': 'hidden'">
+            <div x-show="$wire.step == 2">
                 <h2 class="text-xl font-bold">{{ __('ID confirmation') }}</h2>
 
                 <div class="mb-4"
@@ -69,16 +72,16 @@
                             toString(date, format) {
                                 // you should do formatting based on the passed format,
                                 // but we will just return 'M/D/YYYY' for simplicity
-                                const day = date.getDate();
-                                const month = date.getMonth() + 1;
+                                const day = ('0' + date.getDate()).slice(-2);
+                                const month = ('0' + (date.getMonth() + 1)).slice(-2);
                                 const year = date.getFullYear();
-                                return `${month}/${day}/${year}`;
+                                return `${day}.${month}.${year}`;
                             },
                             parse(dateString, format) {
                                 // dateString is the result of `toString` method
-                                const parts = dateString.split('/');
-                                const month = parseInt(parts[0], 10);
-                                const day = parseInt(parts[1], 10) - 1;
+                                const parts = dateString.split('.');
+                                const day = parseInt(parts[0], 10);
+                                const month = parseInt(parts[1], 10) - 1;
                                 const year = parseInt(parts[2], 10);
                                 return new Date(year, month, day);
                             },
@@ -93,7 +96,6 @@
                         type="text"
                         wire:model="form.dob"
                         class="mt-1 @error('form.dob') border-red-500 @enderror focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                        placeholder="{{ __('Date of birth') }}"
                     />
                     @error('form.dob') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
@@ -111,7 +113,7 @@
                     @error('form.document_type') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-4" x-show="$wire.form.document_type">
                     <label for="document_file" class="block text-sm font-medium text-gray-700">{{ __('Document File') }} *</label>
                     <div class="mt-1 flex justify-center items-center">
                         @if (!empty($form->document_file) && $form->document_file->isPreviewable())
@@ -132,7 +134,7 @@
             </div>
 
 
-            <div :class="$wire.step == 3? '': 'hidden'">
+            <div x-show="$wire.step == 3">
                 <h2 class="text-xl font-bold">{{ __('Address') }}</h2>
 
                 <div class="mb-4">
