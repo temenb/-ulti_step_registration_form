@@ -42,7 +42,7 @@ class Register extends Form
 
     public ?string $note;
 
-    public function save()
+    public function save(): void
     {
         $this->step = 0;
         $validatedData = $this->validate();
@@ -72,7 +72,7 @@ class Register extends Form
         };
     }
 
-    public function rules()
+    public function rules() // @phpstan-ignore-line
     {
         $rulesSet = [
             1 => [
@@ -111,7 +111,7 @@ class Register extends Form
         return $rules;
     }
 
-    public function messages()
+    public function messages() // @phpstan-ignore-line
     {
         return [
             'phone.phone' => 'The phone field is not valid phone.',

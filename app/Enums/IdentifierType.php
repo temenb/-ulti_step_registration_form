@@ -11,7 +11,7 @@ enum IdentifierType: string
      * @param IdentifierType $type
      * @return string
      */
-    static public function title(IdentifierType $type): string
+    public static function title(IdentifierType $type): string
     {
         return match ($type) {
             self::Passport => 'Passport',
@@ -19,6 +19,9 @@ enum IdentifierType: string
         };
     }
 
+    /**
+     * @return string[]
+     */
     public static function toArray(): array
     {
         return array_column(IdentifierType::cases(), 'value');

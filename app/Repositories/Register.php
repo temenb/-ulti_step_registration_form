@@ -18,16 +18,16 @@ class Register implements IRepository
      * @param string $email
      * @param string $password
      * @param string $dob
-     * @param string $document_type
-     * @param string $document_file
+     * @param string $documentType
+     * @param string $documentFile
      * @param string $address
      * @param string $city
-     * @param string $zip_code
-     * @param int $country
+     * @param string $zipCode
+     * @param int $countryId
      * @param string|null $note
      * @return bool
      */
-    static public function signUp(
+    public static function signUp(
         string $name,
         string $phone,
         string $email,

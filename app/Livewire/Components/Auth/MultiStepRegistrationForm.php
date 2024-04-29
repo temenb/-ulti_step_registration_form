@@ -22,7 +22,7 @@ class MultiStepRegistrationForm extends Component
 
     public Register $form;
 
-    public function nextStep()
+    public function nextStep(): void
     {
         $this->form->step = $this->step;
 
@@ -31,14 +31,14 @@ class MultiStepRegistrationForm extends Component
         $this->latestStep = ($this->latestStep > $this->step)? $this->latestStep: $this->step;
     }
 
-    public function changeStep(int $step)
+    public function changeStep(int $step): void
     {
         if ($this->latestStep >= $step) {
             $this->step = $step;
         }
     }
 
-    public function register()
+    public function register(): void
     {
         $this->form->save();
         session()->flash('message', 'Registration is successful!');

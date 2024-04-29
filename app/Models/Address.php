@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property string $uuid
@@ -29,7 +30,7 @@ class Address extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function country(): hasOne
+    public function country(): HasOne
     {
         return $this->hasOne(User::class);
     }

@@ -12,7 +12,7 @@ use Faker\Factory as Faker;
 
 class RegistrationTest extends TestCase
 {
-    public function test_can_not_go_to_next_step_because_of_validation()
+    public function testCanNotGoToNextStepBecauseOfValidation()
     {
         Livewire::test(MultiStepRegistrationForm::class)
             ->assertSee('Personal information')
@@ -21,7 +21,7 @@ class RegistrationTest extends TestCase
             ->assertSet('step', 1);
     }
 
-    public function test_can_go_to_next_step()
+    public function testCanGoToNextStep()
     {
         $pass = fake()->word;
         Livewire::test(MultiStepRegistrationForm::class)
@@ -35,7 +35,7 @@ class RegistrationTest extends TestCase
             ->assertSee('ID confirmation');
     }
 
-    public function test_can_go_to_previous_step()
+    public function testCanGoToPreviousStep()
     {
         $pass = fake()->word;
         Livewire::test(MultiStepRegistrationForm::class)
@@ -50,7 +50,7 @@ class RegistrationTest extends TestCase
             ->assertSet('step', 1);
     }
 
-    public function test_register()
+    public function testRegister()
     {
         $country = Country::firstOrCreate(['name' => 'Ukraine']);
 
