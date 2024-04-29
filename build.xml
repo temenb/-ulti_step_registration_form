@@ -183,11 +183,11 @@
 
     <target name="phpmd" unless="phpmd.done"
             description="Perform project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
-<!--        <exec executable="${phpmd}" taskname="phpmd">-->
-<!--            <arg path="${basedir}/app"/>-->
-<!--            <arg value="text"/>-->
-<!--            <arg path="${basedir}/build/phpmd.xml"/>-->
-<!--        </exec>-->
+        <exec executable="${phpmd}" taskname="phpmd">
+            <arg path="${basedir}/app"/>
+            <arg value="text"/>
+            <arg path="${basedir}/build/phpmd.xml"/>
+        </exec>
         <property name="phpmd.done" value="true"/>
     </target>
 
@@ -219,18 +219,18 @@
     </target>
 
     <target name="phpstan" unless="phpstan.done" depends="prepare" description="Run phpstan.">
-<!--        <exec executable="docker">-->
-<!--            <arg value="exec"/>-->
-<!--            <arg value="${docker.php}"/>-->
-<!--            <arg value="sh"/>-->
-<!--            <arg value="-c"/>-->
-<!--            <arg value="${phpstan}-->
-<!--                &#45;&#45;configuration=phpstan.neon-->
-<!--                &#45;&#45;memory-limit=1240M-->
-<!--                &#45;&#45;no-progress-->
-<!--                &#45;&#45;error-format=checkstyle-->
-<!--                >> './build/reports/phpstan/report.log'" />-->
-<!--        </exec>-->
+        <exec executable="docker">
+            <arg value="exec"/>
+            <arg value="${docker.php}"/>
+            <arg value="sh"/>
+            <arg value="-c"/>
+            <arg value="${phpstan}
+                --configuration=phpstan.neon
+                --memory-limit=1240M
+                --no-progress
+                --error-format=checkstyle
+                >> './build/reports/phpstan/report.log'" />
+        </exec>
         <property name="phpstan.done" value="true"/>
     </target>
 
