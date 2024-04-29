@@ -21,8 +21,8 @@ class Kyc extends Model
     public $fillable = [
         'user_id',
         'dob',
-        'identifier_type',
-        'identifier_file',
+        'document_type',
+        'document_file',
     ];
 
     public function user(): BelongsTo

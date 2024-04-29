@@ -10,8 +10,8 @@ parameters:
 	    - routes/
 	reportUnmatchedIgnoredErrors: true
 	checkGenericClassInNonGenericObjectType: false
-	excludePaths:
-		- database/migrations/2024_03_20_035317_create_permission_tables.php
+#	excludePaths:
+#		- database/migrations/2024_03_20_035317_create_permission_tables.php
 	ignoreErrors:
 		-
 			message: '#Method [a-zA-Z0-9\\_]+::[a-zA-Z0-9_]+\(\) has no return type specified\.#'

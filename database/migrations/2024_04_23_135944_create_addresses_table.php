@@ -17,7 +17,8 @@ return new class extends Migration
             $table->unsignedInteger('country_id');
             $table->string('address');
             $table->string('city');
-            $table->string('note')->nullable();
+            $table->string('zip_code');
+            $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('country_id')->references('id')->on('countries');

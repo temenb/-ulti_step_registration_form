@@ -1,3 +1,5 @@
 import './bootstrap';
 import '../css/app.css';
-import flatpickr from "flatpickr";
+import Pikaday from 'pikaday';
+import "pikaday/css/pikaday.css";
+window.Pikaday = Pikaday;

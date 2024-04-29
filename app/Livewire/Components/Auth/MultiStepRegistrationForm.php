@@ -3,6 +3,7 @@
 namespace App\Livewire\Components\Auth;
 
 use App\Livewire\Forms\Auth\Register;
+use App\Models\Kyc;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -14,44 +15,35 @@ use Livewire\WithFileUploads;
 class MultiStepRegistrationForm extends Component
 {
     use WithFileUploads;
-    public int $step = 1;
-    public int $currentStep = 1;
 
-    #[Validate('image|max:10000')]
-    public ?TemporaryUploadedFile $document_file = null;
+    #[Locked]
+    public int $step = 1;
+
+    #[Locked]
+    public int $latestStep = 1;
 
     public Register $form;
 
     public function nextStep()
     {
-        $attributes = match($this->step) {
-            1 => ['name','phone','email','password'],
-            2 => ['dob', 'document_type', 'document_file'],
-            3 => ['country_id', 'address', 'city', 'note'],
-            default => [],
-        };
+        $this->form->step = $this->step;
 
-        foreach ($attributes as $attribute) {
-            $this->form->validateOnly($attribute);
-        }
-
+        $this->form->validate();
         $this->step++;
-        $this->currentStep = $this->step;
+        $this->latestStep = ($this->latestStep > $this->step)? $this->latestStep: $this->step;
     }
 
-    public function prevStep()
+    public function changeStep(int $step)
     {
-        $this->step--;
+        if ($this->latestStep >= $step) {
+            $this->step = $step;
+        }
     }
 
     public function register()
     {
-
-//        if (! empty($this->image)) {
-//            /** @var string $path */
-//            $this->form->imagepath = $this->image->store(path: Vocabulary::IMAGES_PATH);
-//        }
-        $this->form->persist();
+        $this->form->save();
         session()->flash('message', 'Registration is successful!');
+        $this->reset(['step', 'latestStep']);
     }
 }

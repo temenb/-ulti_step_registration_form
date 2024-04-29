@@ -17,9 +17,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Address extends Model
 {
     public $fillable = [
-        'state',
         'user_id',
-        'translation_uuid',
+        'country_id',
+        'city',
+        'address',
+        'zip_code',
     ];
 
     public function user(): BelongsTo

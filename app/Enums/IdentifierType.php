@@ -4,17 +4,23 @@ namespace App\Enums;
 
 enum IdentifierType: string
 {
-    case passport = 'Passport';
-    case driving_license = 'Driving license';
+    case Passport = 'passport';
+    case DrivingLicense = 'driving_license';
 
     /**
-     * @return string[]
+     * @param IdentifierType $type
+     * @return string
      */
-    static public function enum(): array
+    static public function title(IdentifierType $type): string
     {
-        return [
-            IdentifierType::passport->name => IdentifierType::passport->value,
-            IdentifierType::driving_license->name => IdentifierType::driving_license->value,
-        ];
+        return match ($type) {
+            self::Passport => 'Passport',
+            self::DrivingLicense => 'Driving license',
+        };
+    }
+
+    public static function toArray(): array
+    {
+        return array_column(IdentifierType::cases(), 'value');
     }
 }

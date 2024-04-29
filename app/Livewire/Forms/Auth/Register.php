@@ -3,68 +3,122 @@
 namespace App\Livewire\Forms\Auth;
 
 use App\Enums\IdentifierType;
+use App\Models\Kyc;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
 use App\Repositories\Register as RegisterRepo;
 use Livewire\Attributes\Validate;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\Form;
 
 class Register extends Form
 {
+    #[Locked]
+    public int $step = 1;
 
-    #[Validate('required|string')]
-    public string $name = 'asdf';
+    public string $name = '';
 
-    #[Validate('required|phone')]
-    public string $phone = '+380661215732';
+    public string $phone = '';
 
-    #[Validate('required|email')]
-    public string $email = 'temenb@gmail.com';
+    public string $email = '';
 
-    #[Validate('required|max:20|confirmed')]
-    public string $password = '123';
+    public string $password = '';
 
-    public string $password_confirmation = '123';
+    public string $password_confirmation = '';
 
-    #[Validate('required|date')]
-    public string $dob;
+    public string $dob = '';
 
-    #[Validate]
-    public string $document_type = IdentifierType::passport->name;
+    public string $document_type = IdentifierType::Passport->value;
 
-    #[Validate('required|string')]
-    public string $document_file = 'asdf';
+    public ?TemporaryUploadedFile $document_file;
 
-    #[Validate('required|string')]
-    public string $address = '123';
+    public string $address = '';
 
-    #[Validate('required|string')]
-    public string $city = '123';
+    public string $city = '';
 
-    #[Validate('required|regex:/^\d{5}(?:[-\s]\d{4})?$/')]
-    public string $zip_code = '12334';
+    public string $zip_code = '';
 
-    #[Validate('required|exists:country')]
-//    public int $country = 0;
-    public int $country = 1;
+    public int $country_id = 0;
 
-    #[Validate('string')]
-    public $note;
+    public ?string $note;
 
-    public function persist()
+    public function save()
     {
-        $data = $this->validate();
+        $this->step = 0;
+        $validatedData = $this->validate();
+        /** @var TemporaryUploadedFile $documentFile */
+        $documentFile = $this->document_file;
+        /** @var string $filePath */
+        $filePath = $documentFile->store(path: Kyc::DOCUMENT_PATH);
+        $data = [
+            'name'          => $validatedData['name'],
+            'phone'         => $validatedData['phone'],
+            'email'         => $validatedData['email'],
+            'password'      => $validatedData['password'],
+            'dob'           => $validatedData['dob'],
+            'documentType'  => $validatedData['document_type'],
+            'documentFile'  => $filePath,
+            'address'       => $validatedData['address'],
+            'city'          => $validatedData['city'],
+            'zipCode'       => $validatedData['zip_code'],
+            'countryId'     => $validatedData['country_id'],
+            'note'          => $validatedData['note'],
+        ];
 
-        dd($data);
-        RegisterRepo::signUp(...$data);
+        if (RegisterRepo::signUp(...$data)) {
+            $this->reset();
+        } else {
+            Storage::delete($filePath);
+        };
     }
 
     public function rules()
     {
-        return [
-            'document_type' => [
-                'required',
-                new Enum(IdentifierType::class),
+        $rulesSet = [
+            1 => [
+                'name' => 'required|string|max:30',
+                'phone' => 'required|unique:users|phone:INTERNATIONAL,UA',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|max:20|confirmed',
+                'password_confirmation' => 'required',
             ],
+            2 => [
+                'dob' => 'required|date',
+                'document_file' => 'image|max:10000',
+                'document_type' => [
+                    'required',
+                    new Enum(IdentifierType::class),
+                ],
+            ],
+            3 => [
+                'address' => 'required|string',
+                'city' => 'required|string',
+                'zip_code' => 'required|regex:/^\d{5}(?:[-\s]\d{4})?$/',
+                'country_id' => 'required|exists:countries,id',
+                'note' => 'nullable|string',
+            ]
+        ];
+
+        if (isset($rulesSet[$this->step])) {
+            return $rulesSet[$this->step];
+        }
+
+        $rules = [];
+        foreach ($rulesSet as $set) {
+            $rules = array_merge($rules, $set);
+        }
+
+        return $rules;
+    }
+
+    public function messages()
+    {
+        return [
+            'phone.phone' => 'The phone field is not valid phone.',
+            'dob.required' => 'The date of birth field is required.',
+            'dob.date' => 'The date of birth field must be a valid date.',
+            'zip_code.regex' => 'The zip_code field is not valid zip code.',
         ];
     }
 }
